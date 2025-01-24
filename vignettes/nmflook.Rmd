@@ -1,0 +1,103 @@
+---
+title: "Exploring NMF and other views of high-dimensional multivariate data"
+shorttitle: "Dimension reduction concepts"
+author: "Vincent J. Carey, stvjc at channing.harvard.edu"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+vignette: >
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteIndexEntry{Exploring NMF and other views of high-dimensional multivariate data}
+  %\VignetteEncoding{UTF-8}
+output:
+  BiocStyle::html_document:
+    highlight: pygments
+    number_sections: yes
+    theme: united
+    toc: yes
+---
+
+# Overview
+
+To improve my
+understanding of the role of the HALS algorithm for NMF analysis
+of genomic data, I work with the ALL microarray dataset.
+
+```
+     Sabina Chiaretti, Xiaochun Li, Robert Gentleman, Antonella Vitale,
+     Marco Vignetti, Franco Mandelli, Jerome Ritz, and Robin Foa Gene
+     expression profile of adult T-cell acute lymphocytic leukemia
+     identifies distinct subsets of patients with different response to
+     therapy and survival. Blood, 1 April 2004, Vol. 103, No. 7.
+```
+
+```{r getlibs,message=FALSE,results="hide"}
+# to avoid conflicting symbol warnings
+suppressWarnings({
+library(ALL)
+library(matrixStats)
+library(hgu95av2.db)
+library(SummarizedExperiment)
+library(randomForest)
+})
+```
+
+# Data acquisition and setup
+
+## Filtering and feature annotation
+
+I reduce the dataset down to two patient types:
+those with BCR/ABL fusion and those negative
+for any known cytogenetic feature used
+in prognosis at the time of the study.
+```{r lk1,message=FALSE}
+library(ALL)
+data(ALL)
+fuvn = ALL[, which(ALL$mol.biol %in% c("BCR/ABL", "NEG"))]
+fuvn$mol.biol = factor(fuvn$mol.biol)
+```
+
+I filter the features down to those
+in the upper quantile of between-patient
+variation.
+
+```{r dofilt,message=FALSE}
+library(matrixStats)
+ss = rowSds(exprs(fuvn))
+#> sum(ss>.5)
+#[1] 3182
+ffuvn = fuvn[which(ss>.5),]
+```
+
+Transform the data representation to SummarizedExperiment
+and rename the features with HUGO symbols.
+```{r rena}
+library(hgu95av2.db)
+mapas = mapIds(hgu95av2.db, keys=rownames(ffuvn), column="SYMBOL", keytype="PROBEID")
+# as = affy to symbol
+library(SummarizedExperiment)
+ffuvnse = as(ffuvn, "SummarizedExperiment")
+ffuvnse
+bad = which(is.na(mapas))
+pbad = names(mapas)[bad]
+exclprobes = intersect(pbad, rownames(ffuvnse))
+badinds = which(rownames(ffuvnse) %in% exclprobes)
+ffuvnse = ffuvnse[-badinds,]
+rowData(ffuvnse) = DataFrame(probeid=rownames(ffuvnse), sym=mapas[rownames(ffuvnse)])
+rownames(ffuvnse) = rowData(ffuvnse)$sym
+ffuvnse
+```
+
+# Isolation of informative features using random forests
+
+```{r getrf, message=FALSE, cache=TRUE}
+library(randomForest)
+set.seed(1234) # make reproducible
+ldf = data.frame(molb=ffuvnse$mol.biol, t(assay(ffuvnse)))
+rf1 = randomForest(molb~., data=ldf, importance=TRUE)
+rf1
+```
+Even though the overall OOB misclassification estimate is attractive,
+the confusion matrix is not very appealing.
+
+```{r lkvari}
+varImpPlot(rf1)
+```
