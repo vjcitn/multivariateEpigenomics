@@ -37,6 +37,7 @@ library(matrixStats)
 library(hgu95av2.db)
 library(SummarizedExperiment)
 library(randomForest)
+library(NMF)
 })
 ```
 
@@ -141,3 +142,17 @@ sequelae) within BCR/ABL fusion.  To confirm this,
 one could work with samples from the TARGET study using
 Bioconductor's [GenomicDataCommons](https://bioconductor.org/packages/release/bioc/html/GenomicDataCommons.html)
 package.
+
+# Multivariate exploration 2: NMF
+
+How does NMF help us explore expression
+patterns in this data?  The matrix $X_{n \times p}$ of
+expression values (samples in rows, columns are genes)
+is factored as $X \approx WH^t$ with
+the rank of $W$ set at $r << p$.
+
+```{r donmf1, message=FALSE}
+library(NMF)
+nmf1 = nmf(ldf[, top], 4)
+basismap(nmf1)
+coefmap(nmf1)
