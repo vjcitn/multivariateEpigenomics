@@ -69,7 +69,7 @@ ffuvn = fuvn[which(ss>.5),]
 
 Transform the data representation to SummarizedExperiment
 and rename the features with HUGO symbols.
-```{r rena}
+```{r rena, message=FALSE}
 library(hgu95av2.db)
 mapas = mapIds(hgu95av2.db, keys=rownames(ffuvn), column="SYMBOL", keytype="PROBEID")
 # as = affy to symbol
@@ -101,3 +101,43 @@ the confusion matrix is not very appealing.
 ```{r lkvari}
 varImpPlot(rf1)
 ```
+
+Let's take the top 15 features for multivariate analysis.
+
+```{r gettop}
+im = rf1$importance
+top = rownames(im[order(im[,3], decreasing=TRUE),])[1:15]
+top
+```
+
+# Multivariate exploration 1: PCA
+
+Basic computation:
+```{r dopc1}
+pp = prcomp(data.matrix(ldf[,top]))
+```
+
+Overview:
+```{r lkpcs}
+pairs(pp$x[,1:4], col=factor(ldf$molb), pch=19, cex=.4)
+```
+
+A simple biplot to show some details
+of the projection (first two components)
+```{r dopc1b}
+ggbiplot(pp) + geom_point(aes(colour=ldf$molb))
+```
+Try 2 and 3:
+```{r dopc2}
+ggbiplot(pp, c(2,3)) + geom_point(aes(colour=ldf$molb))
+```
+
+While PC1 seems to provide information to discriminate
+BCR/ABL fusion from other ALL negative for prognostic cytogenetic
+features, PC2 and PC3 may be helping to isolate genes
+that discriminate different transcriptional
+patterns (and possibly different clinical
+sequelae) within BCR/ABL fusion.  To confirm this,
+one could work with samples from the TARGET study using
+Bioconductor's [GenomicDataCommons](https://bioconductor.org/packages/release/bioc/html/GenomicDataCommons.html)
+package.
