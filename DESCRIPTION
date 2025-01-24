@@ -12,7 +12,7 @@ Description: Review methods and data representations for
 Depends: R (>= 4.3.0), tools, utils
 Suggests: knitr, BiocStyle, testthat, rmarkdown,
 	hgu95av2.db, randomForests, NMF, matrixStats,
-	Biobase, SummarizedExperiment, ALL
+	Biobase, SummarizedExperiment, ALL, ggbiplot
 License: Artistic-2.0
 VignetteBuilder: knitr
 biocViews: Infrastructure
