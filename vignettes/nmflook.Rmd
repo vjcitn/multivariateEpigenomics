@@ -37,6 +37,8 @@ library(matrixStats)
 library(hgu95av2.db)
 library(SummarizedExperiment)
 library(randomForest)
+library(ggbiplot)
+library(multivariateEpigenomics)
 library(NMF)
 })
 ```
@@ -145,14 +147,32 @@ package.
 
 # Multivariate exploration 2: NMF
 
-How does NMF help us explore expression
+How does non-negative matrix factorization
+(NMF) help us explore expression
 patterns in this data?  The matrix $X_{n \times p}$ of
-expression values (samples in rows, columns are genes)
+expression values (rows correspond to patients,
+columns to genes)
 is factored as $X \approx WH^t$ with
 the rank of $W$ set at $r << p$.
 
+## Gaujoux' package
+
+We'll use a CRAN package for NMF by Renaud Gaujoux
+and set $r$ to 4.
 ```{r donmf1, message=FALSE}
 library(NMF)
 nmf1 = nmf(ldf[, top], 4)
+```
+The W and H matrices can be visualized
+in heatmaps:
+```{r lkw}
 basismap(nmf1)
 coefmap(nmf1)
+```
+
+## Gregg implementation of HALS in Julia 
+
+```{r domo, message=FALSE}
+library(multivariateEpigenomics)
+nmf2 = nmf_HALS(data.matrix(ldf[, top]), 4)
+```
