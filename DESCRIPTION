@@ -2,18 +2,20 @@ Package: multivariateEpigenomics
 Title: Statistical analysis for epigenomic assays
 Version: 0.0.1
 Authors@R:
-    person(given = "Vince",
+    c(person(given = "Vince",
            family = "Carey",
            role = c("aut", "cre"),
            email = "stvjc@channing.harvard.edu",
-           comment = c(ORCID = "0000-0003-4046-0063"))
+           comment = c(ORCID = "0000-0003-4046-0063")),
+      person(given = "Rpbert", family="Gregg",
+              role="aut"))
 Description: Review methods and data representations for
 	epigenomic studies.
-Depends: R (>= 4.3.0), tools, utils
+Depends: R (>= 4.3.0), utils
 Suggests: knitr, BiocStyle, testthat, rmarkdown,
-	hgu95av2.db, randomForests, NMF, matrixStats,
+	hgu95av2.db, randomForest, NMF, matrixStats,
 	Biobase, SummarizedExperiment, ALL, ggbiplot,
-	JuliaCall
+Imports: JuliaCall
 License: Artistic-2.0
 VignetteBuilder: knitr
 biocViews: Infrastructure

@@ -3,6 +3,7 @@
 #' @import JuliaCall
 #' @param x matrix
 #' @param r target rank
+#' @param maxiter numeric, passed to julia
 #' @param alpha regularization factor, defaults to 0.2
 #' @return a list with elements, X, W, H, res, call
 #' @examples
@@ -27,8 +28,11 @@ nmf_HALS = function(x, r, alpha=0.2, maxiter=250) {
   cmd2 = sprintf("solveNMF(nmf, maxiter=%d);", as.integer(maxiter))
   julia_command(cmd2)
   X = julia_eval("nmf.X")
+  dimnames(X) = dimnames(x)
   W = julia_eval("nmf.W")
+  rownames(W) = rownames(x)
   H = julia_eval("nmf.H")
+  rownames(H) = colnames(x)  # H needs transpose
   julia_command("res = residual(nmf);")
   res = julia_eval("res")
   list(X=X, W=W, H=H, res=res, call=ca)

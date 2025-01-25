@@ -12,6 +12,8 @@ nmf_HALS(x, r, alpha = 0.2, maxiter = 250)
 \item{r}{target rank}
 
 \item{alpha}{regularization factor, defaults to 0.2}
+
+\item{maxiter}{numeric, passed to julia}
 }
 \value{
 a list with elements, X, W, H, res, call

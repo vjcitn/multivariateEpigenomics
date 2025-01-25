@@ -140,7 +140,26 @@ BCR/ABL fusion from other ALL negative for prognostic cytogenetic
 features, PC2 and PC3 may be helping to isolate genes
 that discriminate different transcriptional
 patterns (and possibly different clinical
-sequelae) within BCR/ABL fusion.  To confirm this,
+sequelae) within BCR/ABL fusion.  
+
+We'll be comparing this data reduction method
+to NMF.  NMF results are frequently presented
+as heatmaps.  Here's one approach for PCA:
+
+```{r lkpcsheat}
+aheatmap(pp$x[,1:4], scale="none", annRow=ldf$molb)
+```
+
+```{r lkpcrot}
+aheatmap(t(pp$rot[top,1:4]), scale="none", Rowv=NA, Colv=NA)
+
+```
+
+At a minimum, this shows that low values of PC1
+discriminate BCR/ABL fusion reasonably well.
+
+
+To confirm this,
 one could work with samples from the TARGET study using
 Bioconductor's [GenomicDataCommons](https://bioconductor.org/packages/release/bioc/html/GenomicDataCommons.html)
 package.
@@ -166,7 +185,7 @@ nmf1 = nmf(ldf[, top], 4)
 The W and H matrices can be visualized
 in heatmaps:
 ```{r lkw}
-basismap(nmf1)
+basismap(nmf1, annRow=ldf$molb)
 coefmap(nmf1)
 ```
 
@@ -176,3 +195,56 @@ coefmap(nmf1)
 library(multivariateEpigenomics)
 nmf2 = nmf_HALS(data.matrix(ldf[, top]), 4)
 ```
+
+Here's an analog of basismap for the HALS
+algorithm:
+```{r dobashals}
+aheatmap(nmf2$W, scale="r1", annRow=ldf$molb)
+```
+
+Coefficients:
+```{r docohals}
+aheatmap(t(nmf2$H), scale="c1", Rowv=NA, Colv=TRUE)
+```
+
+# Comparing discriminative capacities of the three approaches
+
+We'll use random forests with the data reductions.
+
+## Four PCs
+
+```{r docomp, cache=TRUE}
+newdf1 = data.frame(molb=ldf$molb, pp$x[,1:4])
+head(newdf1,3)
+nr1 = randomForest(molb~., data=newdf1)
+nr1
+```
+
+## Four basis elements from Gajoux NMF
+
+```{r docomp2, cache=TRUE}
+newdf2 = data.frame(molb=ldf$molb, basis(nmf1))
+head(newdf2)
+nr2 = randomForest(molb~., data=newdf2)
+nr2
+```
+
+## Four basis elements from Gregg NMF
+
+```{r docomp3, cache=TRUE}
+newdf3 = data.frame(molb=ldf$molb, nmf2$W)
+head(newdf3)
+nr3 = randomForest(molb~., data=newdf3)
+nr3
+```
+
+# Upshots
+
+This is a very informal overview of dimension
+reduction.  The default choices for the Gajoux
+NMF implementation do seem inferior to the
+HALS implementation by Gregg.  PCA seems
+useful for the task at hand.
+
+Now we need to consider methylation data
+and issues of scale.
